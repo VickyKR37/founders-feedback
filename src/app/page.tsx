@@ -6,49 +6,48 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
-
-// Mock data for ideas
-const mockIdeas: Idea[] = [
-  {
-    id: '1',
-    founderId: 'founder1',
-    founderName: 'Alice Wonderland',
-    title: 'AI-Powered Story Generator for Kids',
-    problem: 'Parents struggle to find engaging and educational bedtime stories for their children. Existing options are often repetitive or not personalized.',
-    solution: 'An AI platform that generates unique, personalized stories for children based on their interests, age, and learning goals. Stories can include interactive elements.',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-    commentCount: 12,
-  },
-  {
-    id: '2',
-    founderId: 'founder2',
-    founderName: 'Bob The Builder',
-    title: 'Sustainable Urban Farming Kits',
-    problem: 'City dwellers lack space and knowledge to grow their own food, leading to reliance on store-bought produce with a high carbon footprint.',
-    solution: 'Compact, modular farming kits designed for balconies and small urban spaces, complete with smart sensors and an app for guidance.',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
-    commentCount: 5,
-  },
-  {
-    id: '3',
-    founderId: 'founder3',
-    founderName: 'Charlie Brown',
-    title: 'Personalized Language Learning Chatbot',
-    problem: 'Learning a new language is hard and often lacks real-world conversation practice. Tutors can be expensive.',
-    solution: 'An AI chatbot that simulates real conversations in various languages, adapting to the user\'s proficiency level and providing instant feedback.',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-    commentCount: 23,
-  },
-];
-
+import { Terminal, Lightbulb } from "lucide-react";
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
 
 export default function HomePage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // In a real app, fetch ideas from a backend/Firebase
-    setIdeas(mockIdeas);
+    const fetchIdeas = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const ideasCollectionRef = collection(db, "ideas");
+        const q = query(ideasCollectionRef, orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        const fetchedIdeas: Idea[] = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          // Ensure createdAt is converted to Date if it's a Firestore Timestamp
+          const createdAt = data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt);
+          return {
+            id: doc.id,
+            founderId: data.founderId,
+            founderName: data.founderName,
+            title: data.title,
+            problem: data.problem,
+            solution: data.solution,
+            createdAt: createdAt,
+            commentCount: data.commentCount || 0,
+          } as Idea;
+        });
+        setIdeas(fetchedIdeas);
+      } catch (err: any) {
+        console.error("Error fetching ideas:", err);
+        setError("Failed to fetch ideas. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchIdeas();
   }, []);
 
   return (
@@ -78,8 +77,19 @@ export default function HomePage() {
 
       <section id="ideas">
         <h2 className="text-3xl font-semibold mb-6">Explore Startup Ideas</h2>
-        {ideas.length === 0 ? (
-          <p className="text-muted-foreground">No ideas posted yet. Be the first!</p>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-10">
+            <Lightbulb className="w-8 h-8 animate-pulse text-primary mr-2" />
+            <p className="text-muted-foreground">Loading ideas...</p>
+          </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <Terminal className="h-5 w-5" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : ideas.length === 0 ? (
+          <p className="text-muted-foreground text-center py-5">No ideas posted yet. Be the first!</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {ideas.map((idea) => (

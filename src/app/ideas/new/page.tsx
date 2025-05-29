@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@/context/user-context"; // To ensure user is logged in
+import { useUser } from "@/context/user-context";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const ideaSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters.").max(100, "Title must be at most 100 characters."),
@@ -21,17 +23,6 @@ const ideaSchema = z.object({
 });
 
 type IdeaFormData = z.infer<typeof ideaSchema>;
-
-// Mock server action
-async function createIdeaAction(data: IdeaFormData): Promise<{ success: boolean; ideaId?: string; error?: string }> {
-  console.log("Submitting idea:", data);
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  // To simulate an error:
-  // return { success: false, error: "Failed to submit idea. Please try again." };
-  return { success: true, ideaId: "newMockIdeaId123" };
-}
-
 
 export default function NewIdeaPage() {
   const router = useRouter();
@@ -55,24 +46,32 @@ export default function NewIdeaPage() {
         description: "Please sign in to post an idea.",
         variant: "destructive",
       });
-      router.push("/auth/signin");
+      router.push("/auth/signin?redirect=/ideas/new");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const result = await createIdeaAction(data); // Using mocked server action
-      if (result.success && result.ideaId) {
-        toast({
-          title: "Idea Posted!",
-          description: "Your idea has been successfully posted.",
-        });
-        reset();
-        router.push(`/ideas/${result.ideaId}`);
-      } else {
-        throw new Error(result.error || "Failed to post idea.");
-      }
+      const newIdeaData = {
+        title: data.title,
+        problem: data.problem,
+        solution: data.solution,
+        founderId: user.uid,
+        founderName: user.displayName || user.email || "Anonymous User",
+        createdAt: serverTimestamp(),
+        commentCount: 0,
+      };
+      
+      const docRef = await addDoc(collection(db, "ideas"), newIdeaData);
+
+      toast({
+        title: "Idea Posted!",
+        description: "Your idea has been successfully posted.",
+      });
+      reset();
+      router.push(`/ideas/${docRef.id}`);
     } catch (error: any) {
+      console.error("Error posting idea:", error);
       toast({
         title: "Error Posting Idea",
         description: error.message || "An unexpected error occurred. Please try again.",
@@ -88,7 +87,6 @@ export default function NewIdeaPage() {
   }
 
   if (!user && !userLoading) {
-     // This is a client-side redirect. Proper auth handling might use middleware.
     router.push('/auth/signin?redirect=/ideas/new');
     return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>Redirecting to sign in...</p></div>;
   }
