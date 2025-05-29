@@ -1,6 +1,7 @@
-// import { initializeApp, getApps, getApp } from "firebase/app";
-// import { getAuth } from "firebase/auth";
-// import { getFirestore } from "firebase/firestore";
+
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,14 +12,34 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-// const auth = getAuth(app);
-// const db = getFirestore(app);
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
 
-// export { app, auth, db };
+if (typeof window !== 'undefined' && !getApps().length) {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+} else if (getApps().length > 0) {
+  app = getApp();
+  auth = getAuth(app);
+  db = getFirestore(app);
+} else {
+  // This case is unlikely to be hit in a typical Next.js client/server environment
+  // but provides a fallback.
+  // For server-side rendering or environments where Firebase might be initialized differently,
+  // ensure this logic is appropriate or expand as needed.
+  app = initializeApp(firebaseConfig); // Or handle error/logging
+  auth = getAuth(app);
+  db = getFirestore(app);
+}
 
-// Mocked auth and db for UI development without full Firebase setup
-export const auth = {
+
+export { app, auth, db };
+
+// Previous mock implementation (now replaced by actual Firebase SDK usage)
+/*
+export const auth_mock = {
   currentUser: null,
   onAuthStateChanged: (callback: (user: any) => void) => {
     // Simulate auth state change after a delay
@@ -49,7 +70,7 @@ export const auth = {
   }
 };
 
-export const db = {
+export const db_mock = {
   // Mock Firestore methods as needed
   collection: (path: string) => ({
     doc: (id?: string) => ({
@@ -84,5 +105,6 @@ export const db = {
     onSnapshot: (callback: any) => { console.log(`Mock onSnapshot for collection ${path}`); return () => {}; }
   }),
   // Add other mock Firestore methods if needed, e.g., serverTimestamp
-  // serverTimestamp: () => new Date(), 
+  // serverTimestamp: () => new Date(),
 };
+*/
