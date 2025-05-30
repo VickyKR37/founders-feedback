@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,6 +39,12 @@ export default function NewIdeaPage() {
     resolver: zodResolver(ideaSchema),
   });
 
+  useEffect(() => {
+    if (!userLoading && !user) {
+      router.push('/auth/signin?redirect=/ideas/new');
+    }
+  }, [user, userLoading, router]);
+
   const onSubmit = async (data: IdeaFormData) => {
     if (!user) {
       toast({
@@ -46,7 +52,7 @@ export default function NewIdeaPage() {
         description: "Please sign in to post an idea.",
         variant: "destructive",
       });
-      router.push("/auth/signin?redirect=/ideas/new");
+      // router.push already handled by useEffect
       return;
     }
 
@@ -59,7 +65,7 @@ export default function NewIdeaPage() {
         founderId: user.uid,
         founderName: user.displayName || user.email || "Anonymous User",
         createdAt: serverTimestamp(),
-        commentCount: 0,
+        commentCount: 0, // Initialize commentCount
       };
       
       const docRef = await addDoc(collection(db, "ideas"), newIdeaData);
@@ -82,15 +88,11 @@ export default function NewIdeaPage() {
     }
   };
   
-  if (userLoading) {
-    return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>Loading user data...</p></div>;
+  if (userLoading || (!user && !userLoading)) { // Show loading or redirecting message
+    return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>{userLoading ? "Loading user data..." : "Redirecting to sign in..."}</p></div>;
   }
-
-  if (!user && !userLoading) {
-    router.push('/auth/signin?redirect=/ideas/new');
-    return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>Redirecting to sign in...</p></div>;
-  }
-
+  
+  // User is authenticated and data is loaded, render the form
   return (
     <div className="max-w-2xl mx-auto py-8">
       <Card className="shadow-lg">
