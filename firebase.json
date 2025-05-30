@@ -1,3 +1,4 @@
+
 {
   "firestore": {
     "rules": "firestore.rules",
@@ -21,17 +22,19 @@
     }
   ],
   "hosting": {
-    "public": ".next",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "apphosting": {
+          "backendId": "founders-feedback"
+        }
+      }
     ]
-  },
-  "rewrites": [
-    {
-      "source": "**",
-      "destination": "/index.html"
-    }
-  ]
+  }
 }
