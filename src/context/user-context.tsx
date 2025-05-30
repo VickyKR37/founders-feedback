@@ -3,7 +3,7 @@
 
 import type { User as FirebaseUser } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { auth } from '@/lib/firebase'; // Using mocked auth
+import { auth } from '@/lib/firebase'; // Using actual auth from firebase.ts
 
 interface User extends FirebaseUser {
   // Add any custom properties if needed
@@ -25,17 +25,25 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((firebaseUser: FirebaseUser | null) => {
-      setUser(firebaseUser as User | null);
+    if (auth) { // Check if auth is initialized
+      const unsubscribe = auth.onAuthStateChanged((firebaseUser: FirebaseUser | null) => {
+        setUser(firebaseUser as User | null);
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    } else {
+      // If auth is null (e.g., Firebase failed to initialize),
+      // set loading to false and don't attempt to subscribe.
+      console.warn("[UserProvider] Firebase Auth is not available. Skipping auth state listener.");
       setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    }
+  }, []); // Empty dependency array means this runs once on mount (client-side)
 
   const signIn = async (email?: string, password?: string) => {
+    if (!auth) throw new Error("Firebase Auth is not initialized.");
     setLoading(true);
     try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const userCredential = await auth.signInWithEmailAndPassword(email!, password!);
       setUser(userCredential.user as User);
       return userCredential;
     } finally {
@@ -44,9 +52,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const signUp = async (email?: string, password?: string) => {
+    if (!auth) throw new Error("Firebase Auth is not initialized.");
     setLoading(true);
     try {
-      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const userCredential = await auth.createUserWithEmailAndPassword(email!, password!);
       // Potentially update profile here if needed
       setUser(userCredential.user as User);
       return userCredential;
@@ -56,6 +65,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOutUser = async () => {
+    if (!auth) throw new Error("Firebase Auth is not initialized.");
     setLoading(true);
     try {
       await auth.signOut();
