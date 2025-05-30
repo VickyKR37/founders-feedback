@@ -25,50 +25,50 @@ if (typeof window === 'undefined') {
   });
 }
 
-// Critical check for API key
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+
+// Critical check for API key. This is the most common point of failure.
 if (!firebaseConfig.apiKey) {
   const errorMessage = "[FirebaseSetup] CRITICAL ERROR: Firebase API Key (NEXT_PUBLIC_FIREBASE_API_KEY) is missing or undefined. Firebase cannot initialize. Ensure this environment variable is correctly set in your Firebase App Hosting / Cloud Run service configuration.";
   console.error(errorMessage);
   if (typeof window === 'undefined') { // Server-side
-    // Forcing an error here to make it very obvious in server logs
+    // This throw should halt server-side rendering and be caught by Next.js, providing a more specific error.
     throw new Error(errorMessage);
   }
-  // On the client, Firebase SDK will also throw an error, but this provides an earlier, more direct message.
-}
-
-let app: FirebaseApp | undefined = undefined;
-let auth: Auth | undefined = undefined;
-let db: Firestore | undefined = undefined;
-
-try {
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-    if (typeof window === 'undefined') {
-      console.log("[FirebaseSetup] Firebase app initialized successfully on the server via initializeApp.");
+  // If on the client, app, auth, db will remain null. Downstream code should handle this.
+} else {
+  try {
+    if (!getApps().length) {
+      app = initializeApp(firebaseConfig);
+      if (typeof window === 'undefined') {
+        console.log("[FirebaseSetup] Firebase app initialized successfully on the server via initializeApp.");
+      }
+    } else {
+      app = getApp();
+      if (typeof window === 'undefined') {
+        console.log("[FirebaseSetup] Existing Firebase app retrieved successfully on the server via getApp.");
+      }
     }
-  } else {
-    app = getApp();
+
+    // If app initialization was successful, get auth and db
+    auth = getAuth(app);
+    db = getFirestore(app);
+
     if (typeof window === 'undefined') {
-      console.log("[FirebaseSetup] Existing Firebase app retrieved successfully on the server via getApp.");
+      console.log("[FirebaseSetup] Firebase Auth and Firestore services retrieved successfully on the server.");
     }
-  }
 
-  // If app initialization (or retrieval) was successful, initialize auth and db
-  auth = getAuth(app);
-  db = getFirestore(app);
-
-  if (typeof window === 'undefined') {
-    console.log("[FirebaseSetup] Firebase Auth and Firestore services retrieved successfully on the server.");
+  } catch (error: any) {
+    const initErrorMessage = `[FirebaseSetup] Firebase initialization or service retrieval failed: ${error.message || String(error)}. This often means your environment variables (NEXT_PUBLIC_FIREBASE_... values) are incorrect or missing in your App Hosting / Cloud Run configuration, or the API key is invalid. Please verify them in the Google Cloud Console. Full Firebase config used (API key redacted for client logs): ${JSON.stringify({ ...firebaseConfig, apiKey: typeof window !== 'undefined' && firebaseConfig.apiKey ? 'REDACTED_ON_CLIENT' : firebaseConfig.apiKey })}`;
+    console.error(initErrorMessage, error);
+    if (typeof window === 'undefined') { // Server-side
+      // This throw should halt server-side rendering.
+      throw new Error(initErrorMessage);
+    }
+    // If on the client, app, auth, db will remain null.
   }
-
-} catch (error: any) {
-  const initErrorMessage = `[FirebaseSetup] Firebase initialization or service retrieval failed: ${error.message || String(error)}. This often means your environment variables (NEXT_PUBLIC_FIREBASE_... values) are incorrect or missing in your App Hosting / Cloud Run configuration. Please verify them in the Google Cloud Console. Full Firebase config used (API key redacted for client logs): ${JSON.stringify({ ...firebaseConfig, apiKey: typeof window !== 'undefined' && firebaseConfig.apiKey ? 'REDACTED_ON_CLIENT' : firebaseConfig.apiKey})}`;
-  console.error(initErrorMessage, error);
-  if (typeof window === 'undefined') {
-    // This error will cause the "Internal Server Error" on the client if it occurs server-side
-    throw new Error(initErrorMessage);
-  }
-  // On the client, allow Firebase SDK to potentially handle its own error display or let consuming code check for undefined auth/db
 }
 
 export { app, auth, db };
