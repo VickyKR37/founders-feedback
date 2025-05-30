@@ -12,31 +12,77 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Explicitly check for API key. This is crucial for Firebase to initialize.
+// Server-side logging for debugging environment variables in deployed environments
+if (typeof window === 'undefined') {
+  console.log("[FirebaseSetup] Attempting to initialize Firebase with API Key ending in: ", process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? String(process.env.NEXT_PUBLIC_FIREBASE_API_KEY).slice(-4) : "UNDEFINED or EMPTY");
+  console.log("[FirebaseSetup] Firebase Config Check:", {
+    apiKey: firebaseConfig.apiKey ? "Present" : "MISSING/UNDEFINED",
+    authDomain: firebaseConfig.authDomain ? "Present" : "MISSING/UNDEFINED",
+    projectId: firebaseConfig.projectId ? "Present" : "MISSING/UNDEFINED",
+    storageBucket: firebaseConfig.storageBucket ? "Present" : "MISSING/UNDEFINED",
+    messagingSenderId: firebaseConfig.messagingSenderId ? "Present" : "MISSING/UNDEFINED",
+    appId: firebaseConfig.appId ? "Present" : "MISSING/UNDEFINED",
+  });
+}
+
+// Critical check for API key
 if (!firebaseConfig.apiKey) {
-  const errorMessage = "CRITICAL ERROR: Firebase API Key (NEXT_PUBLIC_FIREBASE_API_KEY) is missing or undefined. This will cause Firebase initialization to fail. Please set it in your environment variables (e.g., .env.local for local development, or in your cloud hosting configuration for deployed environments).";
+  const errorMessage = "[FirebaseSetup] CRITICAL ERROR: Firebase API Key (NEXT_PUBLIC_FIREBASE_API_KEY) is missing or undefined. Firebase cannot initialize. Ensure this environment variable is correctly set in your Firebase App Hosting / Cloud Run service configuration.";
   console.error(errorMessage);
-  // If running on the server (e.g., during SSR or in API routes),
-  // throw an error to make it obvious and prevent further execution with invalid config.
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined') { // Server-side
     throw new Error(errorMessage);
   }
-  // On the client-side, Firebase SDK will throw its own specific errors (like auth/invalid-api-key)
-  // if initialization proceeds with a missing/invalid key, which is also informative.
+  // On the client, Firebase SDK will also throw an error, but this provides an earlier, more direct message.
 }
 
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-if (!getApps().length) {
-  // It's important that initializeApp is called only once.
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp(); // If already initialized, get the existing app.
+try {
+  if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+    if (typeof window === 'undefined') {
+      console.log("[FirebaseSetup] Firebase app initialized successfully on the server.");
+    }
+  } else {
+    app = getApp();
+    if (typeof window === 'undefined') {
+      console.log("[FirebaseSetup] Existing Firebase app retrieved on the server.");
+    }
+  }
+} catch (error: any) {
+  const initErrorMessage = `[FirebaseSetup] Firebase app initialization failed: ${error.message || String(error)}. This often means your environment variables (NEXT_PUBLIC_FIREBASE_... values) are incorrect or missing in your App Hosting / Cloud Run configuration. Please verify them in the Google Cloud Console.`;
+  console.error(initErrorMessage, error);
+  if (typeof window === 'undefined') {
+    throw new Error(initErrorMessage);
+  }
+  // Allow Firebase SDK to handle client-side error display as well
 }
 
-auth = getAuth(app);
-db = getFirestore(app);
+// Ensure 'app' is defined before trying to get Auth and Firestore
+// This is crucial if initializeApp failed silently on client or in a way not caught above for server
+if (app!) { // Using non-null assertion assuming the try/catch above would throw server-side on failure
+  try {
+    auth = getAuth(app);
+    db = getFirestore(app);
+    if (typeof window === 'undefined') {
+      console.log("[FirebaseSetup] Firebase Auth and Firestore services initialized successfully on the server.");
+    }
+  } catch (error: any) {
+    const servicesErrorMessage = `[FirebaseSetup] Error getting Firebase Auth/Firestore instance: ${error.message || String(error)}. This typically follows an app initialization issue. Check Firebase config and previous logs.`;
+    console.error(servicesErrorMessage, error);
+    if (typeof window === 'undefined') {
+      throw new Error(servicesErrorMessage);
+    }
+  }
+} else {
+  // This block should ideally not be reached if the above error handling for app initialization is effective server-side.
+  const appUndefinedMessage = "[FirebaseSetup] Firebase app object is undefined after initialization attempt. Firebase services (Auth, Firestore) cannot be initialized. This indicates a critical failure in Firebase setup. Check environment variables and previous logs.";
+  console.error(appUndefinedMessage);
+  if (typeof window === 'undefined') {
+    throw new Error(appUndefinedMessage);
+  }
+}
 
 export { app, auth, db };
