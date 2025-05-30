@@ -35,7 +35,7 @@ export function Navbar() {
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Rocket className="h-6 w-6 text-primary" />
           <span className="font-bold sm:inline-block text-lg">
-            Founder Feedback
+            Validly
           </span>
         </Link>
         <nav className="flex items-center gap-4 text-sm lg:gap-6 flex-1">

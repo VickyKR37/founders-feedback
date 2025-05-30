@@ -53,7 +53,7 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
       <section className="text-center py-12 bg-card dark:bg-card-dark p-6 rounded-lg shadow-md">
-        <h1 className="text-4xl font-bold tracking-tight mb-4 text-primary">Welcome to Founder Feedback</h1>
+        <h1 className="text-4xl font-bold tracking-tight mb-4 text-primary">Welcome to Validly</h1>
         <p className="text-xl text-muted-foreground mb-6">
           Share your startup ideas, get honest feedback, and find beta testers.
         </p>

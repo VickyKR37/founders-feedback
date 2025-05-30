@@ -13,7 +13,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: 'Founder Feedback',
+  title: 'Validly',
   description: 'Validate your startup ideas and get community feedback.',
 };
 
@@ -38,7 +38,7 @@ export default function RootLayout({
                 {children}
               </main>
               <footer className="py-6 text-center text-sm text-muted-foreground">
-                © {new Date().getFullYear()} Founder Feedback. All rights reserved.
+                © {new Date().getFullYear()} Validly. All rights reserved.
               </footer>
             </div>
             <Toaster />
