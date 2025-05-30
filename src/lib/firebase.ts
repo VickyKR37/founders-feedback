@@ -29,10 +29,8 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-if (getApps().length === 0) {
+if (!getApps().length) {
   // It's important that initializeApp is called only once.
-  // If an error occurs here (e.g., due to an invalid apiKey despite it being present),
-  // Firebase SDK will throw a specific error.
   app = initializeApp(firebaseConfig);
 } else {
   app = getApp(); // If already initialized, get the existing app.
