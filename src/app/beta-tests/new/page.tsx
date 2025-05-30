@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react"; // Added Suspense
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/user-context";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { DollarSign } from "lucide-react";
+import { DollarSign, Lightbulb } from "lucide-react"; // Added Lightbulb
 
 const betaTestOfferSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters.").max(100, "Title must be at most 100 characters."),
@@ -35,9 +35,9 @@ async function createBetaTestOfferAction(data: BetaTestOfferFormData): Promise<{
   return { success: true, offerId: "newMockOfferId456" };
 }
 
-export default function NewBetaTestOfferPage() {
+function NewBetaTestOfferForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // This hook needs Suspense
   const { toast } = useToast();
   const { user, loading: userLoading } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,7 +72,10 @@ export default function NewBetaTestOfferPage() {
         description: "Please sign in to post a beta test offer.",
         variant: "destructive",
       });
-      router.push("/auth/signin");
+      const baseRedirectPath = '/beta-tests/new';
+      const currentSearchParamsString = searchParams.toString();
+      const redirectPathWithParams = currentSearchParamsString ? `${baseRedirectPath}?${currentSearchParamsString}` : baseRedirectPath;
+      router.push(`/auth/signin?redirect=${encodeURIComponent(redirectPathWithParams)}`);
       return;
     }
 
@@ -100,17 +103,34 @@ export default function NewBetaTestOfferPage() {
     }
   };
 
+  useEffect(() => {
+    if (!userLoading && !user) {
+      const baseRedirectPath = '/beta-tests/new';
+      const currentSearchParamsString = searchParams.toString();
+      const redirectPathWithParams = currentSearchParamsString ? `${baseRedirectPath}?${currentSearchParamsString}` : baseRedirectPath;
+      router.push(`/auth/signin?redirect=${encodeURIComponent(redirectPathWithParams)}`);
+    }
+  }, [user, userLoading, router, searchParams]);
+
   if (userLoading) {
-    return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>Loading user data...</p></div>;
+    return (
+        <div className="flex flex-col justify-center items-center min-h-[300px]">
+            <Lightbulb className="w-10 h-10 animate-pulse text-primary" />
+            <p className="ml-2 mt-2">Loading user data...</p>
+        </div>
+    );
   }
 
   if (!user && !userLoading) {
-     router.push('/auth/signin?redirect=/beta-tests/new');
-     return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>Redirecting to sign in...</p></div>;
+     return (
+        <div className="flex flex-col justify-center items-center min-h-[300px]">
+            <Lightbulb className="w-10 h-10 animate-pulse text-primary" />
+            <p className="ml-2 mt-2">Redirecting to sign in...</p>
+        </div>
+     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl">Offer Your MVP for Beta Testing</CardTitle>
@@ -185,7 +205,20 @@ export default function NewBetaTestOfferPage() {
           </CardFooter>
         </form>
       </Card>
-    </div>
   );
 }
 
+export default function NewBetaTestOfferPage() {
+  return (
+    <div className="max-w-2xl mx-auto py-8">
+      <Suspense fallback={
+          <div className="flex flex-col justify-center items-center min-h-[calc(100vh-15rem)]">
+            <Lightbulb className="w-12 h-12 animate-pulse text-primary" />
+            <p className="mt-4 text-lg">Loading beta test form...</p>
+          </div>
+        }>
+        <NewBetaTestOfferForm />
+      </Suspense>
+    </div>
+  );
+}
