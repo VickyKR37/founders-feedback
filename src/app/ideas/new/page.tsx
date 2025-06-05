@@ -13,8 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/user-context";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+// Removed Firestore imports: import { db } from "@/lib/firebase";
+// Removed Firestore imports: import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const ideaSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters.").max(100, "Title must be at most 100 characters."),
@@ -52,34 +52,35 @@ export default function NewIdeaPage() {
         description: "Please sign in to post an idea.",
         variant: "destructive",
       });
-      // router.push already handled by useEffect
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const newIdeaData = {
-        title: data.title,
-        problem: data.problem,
-        solution: data.solution,
+      // Simulate successful idea posting for demo
+      console.log("Simulating idea post:", {
+        ...data,
         founderId: user.uid,
         founderName: user.displayName || user.email || "Anonymous User",
-        createdAt: serverTimestamp(),
-        commentCount: 0, // Initialize commentCount
-      };
+        createdAt: new Date(), // Use JavaScript Date
+        commentCount: 0,
+      });
+
+      // Simulate a delay like a real API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const docRef = await addDoc(collection(db, "ideas"), newIdeaData);
+      const mockDocId = `mockIdea_${Date.now()}`;
 
       toast({
-        title: "Idea Posted!",
-        description: "Your idea has been successfully posted.",
+        title: "Idea Posted! (Demo)",
+        description: "Your idea has been successfully posted (this is a demo, not saved to DB).",
       });
       reset();
-      router.push(`/ideas/${docRef.id}`);
+      router.push(`/ideas/${mockDocId}`); // Redirect to a mock idea page or homepage
     } catch (error: any) {
-      console.error("Error posting idea:", error);
+      console.error("Error posting idea (simulation):", error);
       toast({
-        title: "Error Posting Idea",
+        title: "Error Posting Idea (Demo)",
         description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -88,11 +89,10 @@ export default function NewIdeaPage() {
     }
   };
   
-  if (userLoading || (!user && !userLoading)) { // Show loading or redirecting message
+  if (userLoading || (!user && !userLoading)) { 
     return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>{userLoading ? "Loading user data..." : "Redirecting to sign in..."}</p></div>;
   }
   
-  // User is authenticated and data is loaded, render the form
   return (
     <div className="max-w-2xl mx-auto py-8">
       <Card className="shadow-lg">

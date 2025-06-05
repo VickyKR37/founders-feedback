@@ -1,5 +1,5 @@
 
-import type { Timestamp } from 'firebase/firestore';
+// Removed: import type { Timestamp } from 'firebase/firestore';
 
 export interface UserProfile {
   uid: string;
@@ -15,7 +15,7 @@ export interface Idea {
   title: string;
   problem: string;
   solution: string;
-  createdAt: Date | Timestamp; // Can be Firebase Timestamp from DB or Date in app
+  createdAt: Date; // Changed from Timestamp
   commentCount: number; 
 }
 
@@ -26,7 +26,7 @@ export interface Comment {
   userName: string;
   userAvatar?: string;
   text: string;
-  createdAt: Date | Timestamp; 
+  createdAt: Date; // Changed from Timestamp
 }
 
 export interface BetaTestOffer {
@@ -38,7 +38,7 @@ export interface BetaTestOffer {
   mvpProblem: string;
   mvpSolution: string;
   price: string; 
-  createdAt: Date | Timestamp;
+  createdAt: Date; // Changed from Timestamp
   applicantCount?: number; 
 }
 
@@ -48,7 +48,7 @@ export interface BetaTestApplicant {
   testerId: string;
   testerName: string;
   testerEmail?: string; 
-  appliedAt: Date | Timestamp; 
+  appliedAt: Date; // Changed from Timestamp
   status: 'applied' | 'accepted' | 'rejected'; 
 }
 
@@ -57,7 +57,7 @@ export interface Conversation {
   participantIds: string[];
   participants: { [uid: string]: { displayName: string; photoURL?: string } };
   lastMessage?: Message;
-  updatedAt: Date | Timestamp;
+  updatedAt: Date; // Changed from Timestamp
 }
 
 export interface Message {
@@ -65,5 +65,5 @@ export interface Message {
   conversationId: string;
   senderId: string;
   text: string;
-  createdAt: Date | Timestamp;
+  createdAt: Date; // Changed from Timestamp
 }

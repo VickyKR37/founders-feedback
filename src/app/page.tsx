@@ -7,8 +7,43 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Lightbulb } from "lucide-react";
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+// Removed Firestore imports: import { db } from '@/lib/firebase';
+// Removed Firestore imports: import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+
+// Mock data for ideas
+const mockIdeas: Idea[] = [
+  {
+    id: 'mock1',
+    founderId: 'founderA',
+    founderName: 'Demo Dave',
+    title: 'Sustainable Dog Toy Subscription Box',
+    problem: 'Pet owners want eco-friendly toys but find it hard to source them consistently. Existing subscription boxes often use plastic or non-sustainable materials.',
+    solution: 'A monthly subscription box delivering curated, high-quality, and sustainable dog toys made from natural or recycled materials. Includes an option to return used toys for recycling.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
+    commentCount: 12,
+  },
+  {
+    id: 'mock2',
+    founderId: 'founderB',
+    founderName: 'Sample Sally',
+    title: 'AI-Powered Language Learning Pen Pal',
+    problem: 'Language learners struggle to find consistent practice partners and receive instant feedback. Traditional apps can feel impersonal.',
+    solution: 'An app that connects users with an AI pen pal. The AI adapts to the user\'s learning level, provides corrections, suggests vocabulary, and simulates natural conversation for immersive practice.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+    commentCount: 7,
+  },
+  {
+    id: 'mock3',
+    founderId: 'founderC',
+    founderName: 'Test Tina',
+    title: 'Hyperlocal Skill-Sharing Platform',
+    problem: 'People have skills they could teach or services they could offer locally, but there\'s no easy way to connect with neighbors who need them.',
+    solution: 'A mobile platform where users can list skills they want to share/teach (e.g., gardening, coding, cooking) or request help. Focuses on very local, community-based exchanges.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 10), // 10 hours ago
+    commentCount: 3,
+  }
+];
+
 
 export default function HomePage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
@@ -20,27 +55,11 @@ export default function HomePage() {
       setIsLoading(true);
       setError(null);
       try {
-        const ideasCollectionRef = collection(db, "ideas");
-        const q = query(ideasCollectionRef, orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        const fetchedIdeas: Idea[] = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          // Ensure createdAt is converted to Date if it's a Firestore Timestamp
-          const createdAt = data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt);
-          return {
-            id: doc.id,
-            founderId: data.founderId,
-            founderName: data.founderName,
-            title: data.title,
-            problem: data.problem,
-            solution: data.solution,
-            createdAt: createdAt,
-            commentCount: data.commentCount || 0,
-          } as Idea;
-        });
-        setIdeas(fetchedIdeas);
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setIdeas(mockIdeas); // Use mock data
       } catch (err: any) {
-        console.error("Error fetching ideas:", err);
+        console.error("Error fetching ideas (mock):", err);
         setError("Failed to fetch ideas. Please try again later.");
       } finally {
         setIsLoading(false);
