@@ -24,15 +24,10 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
     ],
-    "rewrites": [
-      {
-        "source": "**",
-        "apphosting": {
-          "backendId": "founders-feedback"
-        }
-      }
-    ]
+    "rewrites": [{
+      "source": "**", "destination": "/index.html"
+    }]
   }
 }
