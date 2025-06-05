@@ -20,14 +20,20 @@
     ]
   },
   "hosting": {
+    "site": "founders-feedback",
     "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**",
+      "**/node_modules/**"
     ],
-    "rewrites": [{
-      "source": "**", "destination": "/index.html"
-    }]
+    "rewrites": [
+      {
+        "source": "**",
+        "apphosting": {
+          "backendId": "founders-feedback"
+        }
+      }
+    ]
   }
 }
