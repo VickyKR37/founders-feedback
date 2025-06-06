@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, ServerCrash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 
-export default function GlobalError({
+export default function ErrorBoundaryForRouteSegments({ // Renamed component for clarity, was GlobalError
   error,
   reset,
 }: {
@@ -15,12 +15,8 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service or console
-    console.error("Global Error Boundary Caught:", error);
+    console.error("Route Segment Error Boundary Caught:", error);
   }, [error]);
-
-  // For an "Internal Server Error" caught by the global error boundary,
-  // issues with server-side configuration (especially Firebase) are highly probable.
-  // Thus, we will always show the detailed troubleshooting advice.
 
   return (
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
@@ -31,23 +27,23 @@ export default function GlobalError({
           </div>
           <CardTitle className="text-3xl">Application Error</CardTitle>
           <CardDescription>
-            We're sorry, but something went wrong. You encountered an "Internal Server Error".
+            We're sorry, but something went wrong. You encountered an error while processing your request.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
             This might be a temporary issue. You can try to refresh the page or click the button below.
-            However, "Internal Server Errors" often point to a problem on the server.
+            If the problem persists, it might be due to a server-side issue.
           </p>
           
-          {/* Always show this detailed troubleshooting advice for global errors */}
+          {/* Always show this detailed troubleshooting advice for errors caught by this boundary */}
           <div className="mt-4 p-4 bg-destructive/10 border border-destructive/30 rounded-md text-left">
             <div className="flex items-start">
               <AlertTriangle className="h-5 w-5 text-destructive mr-3 mt-0.5 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-destructive">Critical: Investigate Server-Side Logs & Configuration</h4>
                 <p className="text-sm text-destructive/90 mt-1">
-                  An "Internal Server Error" usually means a problem occurred on the server. The details are NOT in this browser message. You MUST check your server logs:
+                  An error occurred on the server. The details are NOT in this browser message. You MUST check your server logs:
                 </p>
                 <ul className="list-disc list-inside text-sm text-destructive/90 mt-2 space-y-1">
                   <li>
@@ -72,7 +68,7 @@ export default function GlobalError({
             </div>
           </div>
            <p className="text-xs text-muted-foreground pt-2">
-            Error details shown to client: {error.message} (Digest for server correlation: {error.digest || 'N/A'})
+            Error details (client-side perspective): {error.message} (Digest for server correlation: {error.digest || 'N/A'})
           </p>
         </CardContent>
         <CardFooter className="flex justify-center">
@@ -84,3 +80,4 @@ export default function GlobalError({
     </div>
   );
 }
+
