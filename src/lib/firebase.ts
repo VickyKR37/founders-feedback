@@ -29,15 +29,12 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 
-// Critical check for API key. This is the most common point of failure.
+// Critical check for API key.
 if (!firebaseConfig.apiKey) {
-  const errorMessage = "[FirebaseSetup] CRITICAL ERROR: Firebase API Key (NEXT_PUBLIC_FIREBASE_API_KEY) is missing or undefined. Firebase cannot initialize. Ensure this environment variable is correctly set in your Firebase App Hosting / Cloud Run service configuration.";
+  const errorMessage = "[FirebaseSetup] CRITICAL ERROR: Firebase API Key (NEXT_PUBLIC_FIREBASE_API_KEY) is missing or undefined. Firebase cannot initialize. Ensure this environment variable is correctly set in your Firebase App Hosting / Cloud Run service configuration. Firebase features will be disabled.";
   console.error(errorMessage);
-  if (typeof window === 'undefined') { // Server-side
-    // This throw should halt server-side rendering and be caught by Next.js, providing a more specific error.
-    throw new Error(errorMessage);
-  }
-  // If on the client, app, auth, db will remain null. Downstream code should handle this.
+  // We are not throwing here to prevent a hard server crash.
+  // `app`, `auth`, `db` will remain null. Downstream code must handle this.
 } else {
   try {
     if (!getApps().length) {
@@ -52,22 +49,25 @@ if (!firebaseConfig.apiKey) {
       }
     }
 
-    // If app initialization was successful, get auth and db
-    auth = getAuth(app);
-    db = getFirestore(app);
-
-    if (typeof window === 'undefined') {
-      console.log("[FirebaseSetup] Firebase Auth and Firestore services retrieved successfully on the server.");
+    if (app) { // Only try to get auth and db if app was initialized
+        auth = getAuth(app);
+        db = getFirestore(app);
+        if (typeof window === 'undefined') {
+          console.log("[FirebaseSetup] Firebase Auth and Firestore services retrieved successfully on the server.");
+        }
+    } else {
+        // This case implies app initialization failed silently above, which shouldn't happen if apiKey is present.
+        // Log an error if app is still null.
+        console.error("[FirebaseSetup] Firebase app object is unexpectedly null after initialization attempt, even with an API key present. Firebase features will be disabled.");
     }
 
   } catch (error: any) {
-    const initErrorMessage = `[FirebaseSetup] Firebase initialization or service retrieval failed: ${error.message || String(error)}. This often means your environment variables (NEXT_PUBLIC_FIREBASE_... values) are incorrect or missing in your App Hosting / Cloud Run configuration, or the API key is invalid. Please verify them in the Google Cloud Console. Full Firebase config used (API key redacted for client logs): ${JSON.stringify({ ...firebaseConfig, apiKey: typeof window !== 'undefined' && firebaseConfig.apiKey ? 'REDACTED_ON_CLIENT' : firebaseConfig.apiKey })}`;
+    const initErrorMessage = `[FirebaseSetup] Firebase initialization or service retrieval failed during getAuth/getFirestore: ${error.message || String(error)}. This often means your environment variables (NEXT_PUBLIC_FIREBASE_... values) are incorrect or missing in your App Hosting / Cloud Run configuration, or the API key is invalid. Please verify them in the Google Cloud Console. Firebase features will be disabled. Full Firebase config used (API key redacted for client logs): ${JSON.stringify({ ...firebaseConfig, apiKey: typeof window !== 'undefined' && firebaseConfig.apiKey ? 'REDACTED_ON_CLIENT' : firebaseConfig.apiKey })}`;
     console.error(initErrorMessage, error);
-    if (typeof window === 'undefined') { // Server-side
-      // This throw should halt server-side rendering.
-      throw new Error(initErrorMessage);
-    }
-    // If on the client, app, auth, db will remain null.
+    // We are not throwing here. `app`, `auth`, `db` may be null or partially initialized.
+    // Ensure auth and db are nulled out if an error occurs during their retrieval.
+    auth = null;
+    db = null;
   }
 }
 
