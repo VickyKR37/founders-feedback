@@ -18,18 +18,9 @@ export default function GlobalError({
     console.error("Global Error Boundary Caught:", error);
   }, [error]);
 
-  // Determine if it's likely a Firebase configuration issue based on keywords or if it's a server-originated error.
-  // error.digest is often present for errors that originate on the server and are passed to the client error boundary.
-  let isLikelyServerOrFirebaseConfigError = !!error.digest; // Assume server error if digest exists
-  if (!isLikelyServerOrFirebaseConfigError) {
-    if (error.message.includes("Firebase") || error.message.includes("NEXT_PUBLIC_FIREBASE_API_KEY")) {
-      isLikelyServerOrFirebaseConfigError = true;
-    }
-    if (error.stack && (error.stack.includes("firebase.ts") || error.stack.includes("user-context.tsx"))){
-      isLikelyServerOrFirebaseConfigError = true;
-    }
-  }
-
+  // For an "Internal Server Error" caught by the global error boundary,
+  // issues with server-side configuration (especially Firebase) are highly probable.
+  // Thus, we will always show the detailed troubleshooting advice.
 
   return (
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-12">
@@ -40,36 +31,48 @@ export default function GlobalError({
           </div>
           <CardTitle className="text-3xl">Application Error</CardTitle>
           <CardDescription>
-            We're sorry, but something went wrong.
+            We're sorry, but something went wrong. You encountered an "Internal Server Error".
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
             This might be a temporary issue. You can try to refresh the page or click the button below.
+            However, "Internal Server Errors" often point to a problem on the server.
           </p>
-          {isLikelyServerOrFirebaseConfigError && (
-            <div className="mt-4 p-4 bg-destructive/10 border border-destructive/30 rounded-md text-left">
-              <div className="flex items-start">
-                <AlertTriangle className="h-5 w-5 text-destructive mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold text-destructive">Potential Server-Side or Firebase Configuration Issue</h4>
-                  <p className="text-sm text-destructive/90 mt-1">
-                    This error often indicates a problem with the server environment, frequently related to Firebase setup. Please:
-                  </p>
-                  <ul className="list-disc list-inside text-sm text-destructive/90 mt-1 pl-2 space-y-0.5">
-                    <li>
-                      <strong>Check Server Logs:</strong> Review the logs for your application in Google Cloud Logging (specifically for the 'founders-feedback' App Hosting / Cloud Run service). Look for messages from "[FirebaseSetup]" or other specific error details.
-                    </li>
-                    <li>
-                      <strong>Verify Environment Variables:</strong> Ensure that <code>NEXT_PUBLIC_FIREBASE_API_KEY</code> and other <code>NEXT_PUBLIC_FIREBASE_...</code> variables are correctly set with the proper values in your deployed application's environment (Firebase App Hosting / Cloud Run service configuration).
-                    </li>
-                  </ul>
-                </div>
+          
+          {/* Always show this detailed troubleshooting advice for global errors */}
+          <div className="mt-4 p-4 bg-destructive/10 border border-destructive/30 rounded-md text-left">
+            <div className="flex items-start">
+              <AlertTriangle className="h-5 w-5 text-destructive mr-3 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-destructive">Critical: Investigate Server-Side Logs & Configuration</h4>
+                <p className="text-sm text-destructive/90 mt-1">
+                  An "Internal Server Error" usually means a problem occurred on the server. The details are NOT in this browser message. You MUST check your server logs:
+                </p>
+                <ul className="list-disc list-inside text-sm text-destructive/90 mt-2 space-y-1">
+                  <li>
+                    <strong>Check Server Logs in Google Cloud Logging:</strong>
+                    <ol className="list-decimal list-inside pl-4 mt-1 text-xs">
+                      <li>Go to the Google Cloud Console.</li>
+                      <li>Navigate to your Firebase project (`founders-feedback`).</li>
+                      <li>Go to "Logging" &gt; "Logs Explorer".</li>
+                      <li>Filter for logs from your Cloud Run service (this is your App Hosting backend, likely named `founders-feedback`).</li>
+                      <li>Look for **ERROR level logs** around the time the error occurred.</li>
+                      <li>Pay close attention to messages from `[FirebaseSetup]` (these are from `src/lib/firebase.ts`) which can pinpoint Firebase initialization failures (e.g., "CRITICAL ERROR: Firebase API Key... is missing").</li>
+                    </ol>
+                  </li>
+                  <li>
+                    <strong>Verify Environment Variables:</strong> Ensure that <code>NEXT_PUBLIC_FIREBASE_API_KEY</code> and other <code>NEXT_PUBLIC_FIREBASE_...</code> variables are correctly set with the proper values in your deployed application's environment (Firebase App Hosting / Cloud Run service configuration in the Google Cloud Console). These variables are essential for Firebase to work on the server.
+                  </li>
+                </ul>
+                <p className="text-xs text-destructive/80 mt-2">
+                  The actual error message from the server logs is crucial for diagnosing this issue.
+                </p>
               </div>
             </div>
-          )}
+          </div>
            <p className="text-xs text-muted-foreground pt-2">
-            Error details: {error.message} (Digest: {error.digest || 'N/A'})
+            Error details shown to client: {error.message} (Digest for server correlation: {error.digest || 'N/A'})
           </p>
         </CardContent>
         <CardFooter className="flex justify-center">
@@ -81,4 +84,3 @@ export default function GlobalError({
     </div>
   );
 }
-

@@ -1,5 +1,9 @@
 
 {
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
   "hosting": {
     "site": "founders-feedback",
     "public": "public",
@@ -11,8 +15,9 @@
     "rewrites": [
       {
         "source": "**",
-        "apphosting": {
-          "backendId": "founders-feedback"
+        "run": {
+          "serviceId": "founders-feedback",
+          "region": "us-central1"
         }
       }
     ]
