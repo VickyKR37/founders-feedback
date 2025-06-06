@@ -11,9 +11,8 @@
     "rewrites": [
       {
         "source": "**",
-        "run": {
-          "serviceId": "founders-feedback",
-          "region": "europe-west2"
+        "apphosting": {
+          "backendId": "founders-feedback"
         }
       }
     ]
