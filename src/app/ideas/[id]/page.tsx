@@ -67,14 +67,6 @@ async function postCommentAction(ideaId: string, text: string, userId: string, u
   return { success: true, comment: newComment };
 }
 
-export async function generateStaticParams() {
-  // Generate a few mock idea IDs for static export
- return [
-    { id: 'idea1' },
-    { id: 'idea2' },
- ];
-}
-
 export default function IdeaDetailsPage() {
   const params = useParams();
   const router = useRouter();
