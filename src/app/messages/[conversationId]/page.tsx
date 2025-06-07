@@ -13,6 +13,13 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
+export async function generateStaticParams() {
+  // Generate static pages for mock conversation IDs
+  return [
+    { conversationId: 'convo1' },
+    { conversationId: 'convo2' },
+  ];
+}
 
 // Mock data for a single conversation and its messages
 const mockConversationDetail: Conversation = {

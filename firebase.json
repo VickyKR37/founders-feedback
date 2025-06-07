@@ -2,19 +2,11 @@
 {
   "hosting": {
     "site": "founders-feedback",
-    "public": "_empty_public_for_apphosting_fallback",
+    "public": "out",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "apphosting": {
-          "backendId": "founders-feedback"
-        }
-      }
     ]
   },
   "functions": {

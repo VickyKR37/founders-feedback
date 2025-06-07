@@ -25,6 +25,7 @@ const mockIdeaDetails: Idea = {
   problem: 'Parents struggle to find engaging and educational bedtime stories for their children. Existing options are often repetitive or not personalized. This leads to less enthusiasm for reading and missed learning opportunities. The market for childrens educational content is vast, but truly personalized and adaptive storytelling is a niche yet to be fully explored.',
   solution: 'An AI platform that generates unique, personalized stories for children based on their interests, age, and learning goals. Stories can include interactive elements, voice narration, and custom illustrations. The platform will use advanced NLP and machine learning models to adapt story complexity and themes dynamically. A subscription model is proposed with a free tier for basic story generation.',
   createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+  commentCount: 0, // Added mock comment count
 };
 
 const mockComments: CommentType[] = [
@@ -66,6 +67,13 @@ async function postCommentAction(ideaId: string, text: string, userId: string, u
   return { success: true, comment: newComment };
 }
 
+export async function generateStaticParams() {
+  // Generate a few mock idea IDs for static export
+ return [
+    { id: 'idea1' },
+    { id: 'idea2' },
+ ];
+}
 
 export default function IdeaDetailsPage() {
   const params = useParams();
