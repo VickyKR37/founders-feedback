@@ -2,7 +2,7 @@
 {
   "hosting": {
     "site": "founders-feedback",
-    "public": "src/app/page.tsx",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
