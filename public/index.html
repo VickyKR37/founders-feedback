@@ -1,31 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Application Load Error</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; margin: 0; background-color: #f8f9fa; color: #212529; display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: center; padding: 20px; }
-    .container { background-color: #ffffff; padding: 30px 40px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; }
-    h1 { color: #dc3545; font-size: 24px; margin-bottom: 15px; }
-    p { font-size: 16px; line-height: 1.6; margin-bottom: 10px; }
-    strong { color: #007bff; }
-    .details { font-size: 14px; color: #6c757d; margin-top: 20px; }
-  </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Error Loading App</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 20px; background-color: #fef2f2; color: #7f1d1d; display: flex; justify-content: center; align-items: center; min-height: 90vh; text-align: center; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; border: 1px solid #fecaca; }
+        h1 { color: #b91c1c; font-size: 24px; }
+        p { font-size: 16px; line-height: 1.6; }
+        strong { color: #991b1b; }
+        .code { background-color: #fee2e2; padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+        .check-list { text-align: left; margin-top: 20px; padding-left: 20px; }
+        .check-list li { margin-bottom: 10px; }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Next.js Application Not Loaded</h1>
-    <p>You are seeing this fallback page because the main Next.js application could not be reached.</p>
-    <p>This usually means the <strong>Firebase App Hosting backend</strong> (Cloud Run service: <code>founders-feedback</code>) failed to deploy correctly or is not running.</p>
-    <div class="details">
-      <p><strong>Next Steps:</strong></p>
-      <ol style="text-align: left; display: inline-block;">
-        <li>Run <code>firebase deploy --debug</code>.</li>
-        <li>Check deployment logs for errors related to backend service creation.</li>
-        <li>Verify Google Cloud Project settings: Billing, enabled APIs, and IAM permissions.</li>
-      </ol>
+    <div class="container">
+        <h1>Next.js Application Not Loaded</h1>
+        <p>
+            You are seeing this static page because the Next.js application (which should be running on the <strong>Firebase App Hosting backend</strong>) could not be reached.
+        </p>
+        <p>
+            This usually means the backend service (Cloud Run service named <code class="code">founders-feedback</code>) either:
+        </p>
+        <ul class="check-list">
+            <li>Failed to deploy or start correctly.</li>
+            <li>Is not being created at all during the <code class="code">firebase deploy</code> process.</li>
+        </ul>
+        <p>
+            <strong>Next Steps:</strong>
+        </p>
+        <ol class="check-list">
+            <li>Ensure your <code class="code">firebase.json</code> uses <code class="code">"apphosting": { "backendId": "founders-feedback" }</code> in its rewrites (this should be correct now).</li>
+            <li>Verify your Google Cloud Project (<code class="code">founders-feedback</code>) has:
+                <ul>
+                    <li>An <strong>active and healthy Billing Account</strong>.</li>
+                    <li>The following APIs <strong>ENABLED</strong>: Cloud Run, Cloud Build, Artifact Registry, Firebase Hosting, IAM.</li>
+                    <li>Sufficient <strong>IAM Permissions</strong> for the account running <code class="code">firebase deploy</code>.</li>
+                </ul>
+            </li>
+            <li>
+                Run <code class="code">firebase deploy --debug</code> again and carefully examine the <strong>entire log output in your terminal</strong> for errors related to "App Hosting backend setup" or "Cloud Run service creation".
+            </li>
+            <li>Check the Google Cloud Console to see if a Cloud Run service named <code class="code">founders-feedback</code> exists for your project and what its status is.</li>
+        </ol>
     </div>
-  </div>
 </body>
 </html>
